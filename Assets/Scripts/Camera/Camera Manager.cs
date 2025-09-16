@@ -22,7 +22,7 @@ public class CameraManager : MonoBehaviour
 
     [Tooltip("A list of the camera behavior interfaces to use.")]
     [SerializeField]
-    private List<ICameraBehavior> _behaviors;
+    private List<InterfaceWrapper<ICameraBehavior>> _behaviors;
 
     #endregion
 
@@ -47,11 +47,14 @@ public class CameraManager : MonoBehaviour
 
     /// <summary>
     /// This will handle all of the camera target behaviors as time goes on.
+    /// 
+    /// Normally you do this in late update, but I put it in fixed update because
+    /// it looks nicer.
     /// </summary>
-    private void LateUpdate()
+    private void FixedUpdate()
     {
         // Don't bother if we have no target
-        if (_target == null || _behaviors != null)
+        if (_target == null || _behaviors.Count == 0)
         {
             return;
         }
@@ -60,16 +63,16 @@ public class CameraManager : MonoBehaviour
         _targetPosition = _target.Position;
 
         // Set our current position
-        Vector3 positionToMoveTo = transform.position;
+        Vector2 positionToMoveTo = transform.position;
 
         // Run through each interface to modify the behavior
         foreach (var b in _behaviors)
         {
-            b.GetTargetPosition(positionToMoveTo, _targetPosition);
+            positionToMoveTo = b.Value.GetTargetPosition(positionToMoveTo, _targetPosition);
         }
 
         // Move the camera
-        transform.position = positionToMoveTo;
+        transform.position = new Vector3(positionToMoveTo.x, positionToMoveTo.y, transform.position.z);
     }
 
     #endregion
