@@ -13,7 +13,28 @@ public class EventController : MonoBehaviour
 {
     [Tooltip("This is the event to run.")]
     [SerializeField, Header("Event Scriptable Object")]
-    private GameEvent gameEvent;
+    private GameEvent _gameEvent;
+
+    [Tooltip("This is the trigger that will start the event.")]
+    [SerializeField, Header("Event Trigger")]
+    private InterfaceWrapper<IEventTrigger> _eventTrigger;
+
+
+    /// <summary>
+    /// On startup, grab the trigger component and initialize it with this controller.
+    /// </summary>
+    private void Awake()
+    {
+        // Ensure we have a trigger assigned, otherwise we don't run
+        if (_eventTrigger == null)
+        {
+            Debug.LogWarning("No event trigger assigned to the controller.");
+            return;
+        }
+
+        // Initialize the trigger with this controller
+        _eventTrigger.Value.Initialize(this);
+    }
 
     /// <summary>
     /// The trigger will call this method to start the event.
@@ -30,7 +51,7 @@ public class EventController : MonoBehaviour
     private IEnumerator RunEvent()
     {
         // Only run the event if it exists
-        if (gameEvent != null)
+        if (_gameEvent != null)
         {
             // Set the context for the event
             EventContext context = new()
@@ -41,7 +62,7 @@ public class EventController : MonoBehaviour
             };
 
             // Execute each action in the event
-            foreach (var action in gameEvent.actions)
+            foreach (var action in _gameEvent.actions)
             {
                 // Run the action and get a tracker for its completion
                 var trackedCoroutine = StartTrackedCoroutine(action.Execute(context));
